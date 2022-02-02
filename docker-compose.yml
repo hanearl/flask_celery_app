@@ -1,0 +1,31 @@
+version: "3.0"
+services:
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - BROKER_URL=redis://redis
+    depends_on:
+      - redis
+    command: celery -A celery_tasks.tasks worker -l INFO
+
+  redis:
+    image: redis
+    expose:
+      - 6379
+
+  flask:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    command: flask run --host=0.0.0.0
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=development
+      - BROKER_URL=redis://redis
+    depends_on:
+      - redis
+      - celery
